@@ -1,35 +1,30 @@
 // config/db.config.js
-const mysql = require("mysql2/promise");
+const { Pool } = require("pg");
 require("dotenv").config();
 
-// ✅ Create MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "testdb",
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : undefined,
+// ✅ Create PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Required for Neon
+  },
 });
 
 // ✅ Verify connection on startup
 (async () => {
   try {
-    const connection = await pool.getConnection();
-    console.log("✅ MySQL connection established successfully!");
-    connection.release();
+    const client = await pool.connect();
+    console.log("✅ PostgreSQL connection established successfully!");
+    client.release();
   } catch (error) {
-    console.error("❌ MySQL connection failed:");
+    console.error("❌ PostgreSQL connection failed:");
     console.error("Error details:", error.message);
     if (error.code === "ECONNREFUSED") {
-      console.error("⚠️ Check if your MySQL server is online and accepting remote connections.");
-    } else if (error.code === "ER_ACCESS_DENIED_ERROR") {
-      console.error("⚠️ Invalid username or password in your .env file.");
+      console.error("⚠️ Check if your Neon server is online or your connection string is correct.");
+    } else if (error.code === "28P01") {
+      console.error("⚠️ Invalid username or password in your DATABASE_URL.");
     } else if (error.code === "ENOTFOUND") {
-      console.error("⚠️ The DB_HOST is incorrect or unreachable from your server.");
+      console.error("⚠️ The host is incorrect or unreachable from your server.");
     }
   }
 })();
