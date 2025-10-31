@@ -14,7 +14,7 @@ app.use(cors({
     "https://frontendproject-three-ruddy.vercel.app", // your deployed frontend
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 // ✅ Middleware
@@ -48,5 +48,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Access API via: http://localhost:${PORT} or your ngrok URL`);
 });
+
 
 
