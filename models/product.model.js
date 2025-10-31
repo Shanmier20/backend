@@ -3,8 +3,8 @@ const pool = require("../config/db.config");
 // Unified database query helper
 const executeQuery = async (sql, params = []) => {
   try {
-    const [rows] = await pool.execute(sql, params);
-    return rows; // Return only rows for consistency
+    const result = await pool.query(sql, params);
+    return result.rows; // PostgreSQL uses "rows" for returned data
   } catch (error) {
     console.error("Database query error:", error.message);
     throw new Error("Database operation failed.");
@@ -16,12 +16,11 @@ class Product {
   static async create({ name, description, price, quantity }) {
     const sql = `
       INSERT INTO beautyproducts (name, description, price, quantity)
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, name, description, price, quantity, created_at
     `;
-    const result = await pool.execute(sql, [name, description, price, quantity || 0]);
-    const [insertInfo] = result;
-
-    return { id: insertInfo.insertId, name, description, price, quantity: quantity || 0 };
+    const result = await pool.query(sql, [name, description, price, quantity || 0]);
+    return result.rows[0];
   }
 
   // ✅ READ ALL
@@ -39,7 +38,7 @@ class Product {
     const sql = `
       SELECT id, name, description, price, quantity, created_at
       FROM beautyproducts
-      WHERE id = ?
+      WHERE id = $1
     `;
     const rows = await executeQuery(sql, [id]);
     return rows[0] || null;
@@ -49,20 +48,19 @@ class Product {
   static async update(id, { name, description, price, quantity }) {
     const sql = `
       UPDATE beautyproducts
-      SET name = ?, description = ?, price = ?, quantity = ?
-      WHERE id = ?
+      SET name = $1, description = $2, price = $3, quantity = $4
+      WHERE id = $5
+      RETURNING id
     `;
-    const result = await pool.execute(sql, [name, description, price, quantity || 0, id]);
-    const [updateInfo] = result;
-    return updateInfo.affectedRows === 1;
+    const result = await pool.query(sql, [name, description, price, quantity || 0, id]);
+    return result.rowCount === 1;
   }
 
   // ✅ DELETE
   static async delete(id) {
-    const sql = "DELETE FROM beautyproducts WHERE id = ?";
-    const result = await pool.execute(sql, [id]);
-    const [deleteInfo] = result;
-    return deleteInfo.affectedRows === 1;
+    const sql = "DELETE FROM beautyproducts WHERE id = $1";
+    const result = await pool.query(sql, [id]);
+    return result.rowCount === 1;
   }
 }
 
