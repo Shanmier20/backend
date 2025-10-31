@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: [
     "http://localhost:5173", // local dev frontend
-    "https://discriminatively-runniest-wendi.ngrok-free.dev", // your deployed frontend
+    "https://frontend-six-psi-68.vercel.app", // your deployed frontend
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type"],
@@ -48,3 +48,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Access API via: http://localhost:${PORT} or your ngrok URL`);
 });
+
